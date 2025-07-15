@@ -1,0 +1,15 @@
+forecast_samples: 500
+prediction_days: 22
+seed: 42
+dgp_list:
+  - gbm_low_vol
+  - gbm_high_vol
+  - t_garch
+  - mixture_normal
+  - constant
+  - linear
+  - seasonal
+context_lengths:
+  - 22
+  - 66
+  - 252
