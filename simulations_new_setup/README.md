@@ -47,7 +47,9 @@ simulations_new_setup/
 
 Defined by:
 
+```
 jobs/sim_00.yaml
+```
 
 Run the default simulation job with:
 
