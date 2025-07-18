@@ -69,15 +69,48 @@ data/sim_00/
 
 Modify sim_00.yaml to change DGPs, seeds, or volatility assumptions.
 
+
+
 ### 2. Run Forecasts
 
-Forecast configurations are defined in:
+The script `run_forecasts.py` allows you to specify which forecast job (`job_file`) and simulation (`sim_name`) to use.
 
-```
-jobs/job_00.yaml
+By default, it uses:
+
+- `jobs/job_00.yaml` for forecasting parameters  
+- `data/sim_00/` for simulation data  
+- Forecast target type: `"prices"`
+
+You can override all of these via command-line flags.
+
+#### Basic usage
+
+This runs the default forecast setup:
+
+```bash
+python run_forecasts.py --model_name chronos_model_base --target_type prices
 ```
 
-The default settings include:
+#### Custom job and simulation
+
+Specify an alternative YAML file and simulation name like this:
+
+```bash
+python run_forecasts.py \
+  --model_name chronos_model_base \
+  --target_type returns \
+  --job_file jobs/job_custom.yaml \
+  --sim_name sim_custom
+```
+
+This will forecast for:
+- Job: `jobs/job_custom.yaml`
+- Simulation: `data/sim_custom/`
+- Target type: returns
+
+#### Default job_00.yaml settings
+
+When using the default job file `job_00.yaml`, the forecast loop runs with:
 
 - Forecast horizon: 22 days
 - Context lengths: [22, 66, 252]
@@ -92,40 +125,83 @@ The default settings include:
   - `linear`
   - `seasonal`
 
-Run the forecast script for a given model and target type:
+#### Output structure
 
-```bash
-python run_forecasts.py --model_name <model_name> --target_type <prices|returns>
+Forecast results are saved to:
+
+```plaintext
+forecasts/<model_base>/<model_variant>/<job_name>_<sim_name>/<prices|returns>/
 ```
 
-Examples:
+Example:
 
-```bash
-python run_forecasts.py --model_name chronos_model_base --target_type prices
-python run_forecasts.py --model_name chronos_model_base --target_type returns
+```plaintext
+forecasts/chronos/base/job_00_sim_00/prices/
 ```
 
-The script saves forecast results to:
+Each file is named:
 
+```plaintext
+<dgp_name>_ctx<context_length>_seed<seed>.pkl
 ```
-forecasts/<model_base>/<model_variant>/job_00_sim_00/<prices|returns>/
+
+Example:
+
+```plaintext
+mixture_normal_ctx66_seed42.pkl
 ```
 
 
 ### 3. Analyze Forecasts
 
-Run the analysis script to generate LaTeX tables and plots:
+You can analyze any forecast job and simulation by specifying:
 
-```bash
-python analyze_results.py --model_name <model_name> --target_type <prices|returns>
-```
+- `--model_name`: required  
+- `--target_type`: `"prices"` or `"returns"`  
+- `--job_file`: YAML file used for the forecasting job  
+- `--sim_name`: which simulation to analyze (matches the folder under `data/`)
 
-Examples:
+#### Default usage
+
+This analyzes the default job `job_00.yaml` and simulation `sim_00`:
 
 ```bash
 python analyze_results.py --model_name chronos_model_base --target_type prices
-python analyze_results.py --model_name chronos_model_base --target_type returns
 ```
+
+#### Custom job and simulation
+
+Specify a different forecast job and simulation:
+
+```bash
+python analyze_results.py \
+  --model_name chronos_model_base \
+  --target_type returns \
+  --job_file jobs/job_custom.yaml \
+  --sim_name sim_custom
+```
+
+This will read forecast data from:
+
+```plaintext
+forecasts/<model_base>/<model_variant>/job_custom_sim_custom/<returns|prices>/
+```
+
+and save analysis output to:
+
+```plaintext
+results/<model_base>_results/<model_variant>/job_custom_sim_custom/<returns|prices>/
+```
+
+Generated outputs include:
+
+- Forecast summary table (`forecast_table.tex`)
+- Percentile table (`percentiles_table.tex`)
+- KL divergence table (`kl_divergence_table.tex`)
+- Plots:
+  - Forecast paths
+  - Return KDEs and CDFs
+  - Return density comparisons via KL divergence
 
 ---
 
