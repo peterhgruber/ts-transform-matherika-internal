@@ -192,3 +192,5 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+simulations_new_setup/tmp/lag_llama/lag-llama/
+simulations_new_setup/tmp/toto/toto_github/
