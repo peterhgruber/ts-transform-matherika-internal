@@ -3,6 +3,7 @@
 This repository provides a complete simulation and forecasting pipeline for evaluating financial models on synthetic data. It allows for easy configuration, execution, and evaluation of multiple model forecasts across varied data-generating processes (DGPs).
 
 ---
+
 ## Repository Structure
 
 ```plaintext
@@ -68,8 +69,6 @@ data/sim_00/
 ```
 
 Modify sim_00.yaml to change DGPs, seeds, or volatility assumptions.
-
-
 
 ### 2. Run Forecasts
 
@@ -150,7 +149,6 @@ Example:
 ```plaintext
 mixture_normal_ctx66_seed42.pkl
 ```
-
 
 ### 3. Analyze Forecasts
 
