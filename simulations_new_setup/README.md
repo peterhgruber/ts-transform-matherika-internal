@@ -215,7 +215,7 @@ The following models are implemented in the `models/` folder and can be used via
 - `chronos_model_large` †
 - `moirai_model_small`
 - `moirai_model_base`
-- `moirai_model_large`
+- `moirai_model_large` †
 - `tirex_model`
 - `toto_model`
 - `timesfm_model_small` *
