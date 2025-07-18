@@ -212,8 +212,10 @@ The following models are implemented in the `models/` folder and can be used via
 - `chronos_model_tiny`
 - `chronos_model_miny`
 - `chronos_model_base`
+- `chronos_model_large` †
 - `moirai_model_small`
 - `moirai_model_base`
+- `moirai_model_large`
 - `tirex_model`
 - `toto_model`
 - `timesfm_model_small` *
@@ -221,6 +223,7 @@ The following models are implemented in the `models/` folder and can be used via
 - `lag_llama_model`
 
 > Models marked with * require special setup. See note below for TimeSFM.
+> Models marked with † are implemented but not yet tested in forecast runs
 
 ---
 
