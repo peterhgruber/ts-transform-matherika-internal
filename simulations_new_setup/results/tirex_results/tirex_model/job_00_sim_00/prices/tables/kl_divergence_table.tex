@@ -1,0 +1,26 @@
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llrrr}
+\toprule
+ &  & \multicolumn{1}{l}{Day 2} & \multicolumn{1}{l}{Day 12} & \multicolumn{1}{l}{Day 22} \\
+context\_length & dgp\_type & KL divergence & KL divergence & KL divergence \\
+\midrule
+22 & gbm\_low\_vol & 0.12 & 0.70 & 0.79 \\
+22 & gbm\_high\_vol & 0.14 & 0.73 & 0.80 \\
+22 & t\_garch & 0.36 & 0.63 & 0.80 \\
+22 & mixture\_normal & 0.23 & 0.62 & 0.82 \\
+22 & seasonal & 0.21 & 1.01 & 0.91 \\
+\midrule
+66 & gbm\_low\_vol & 0.17 & 1.09 & 1.31 \\
+66 & gbm\_high\_vol & 0.22 & 1.12 & 1.39 \\
+66 & t\_garch & 0.53 & 0.63 & 0.75 \\
+66 & mixture\_normal & 0.25 & 1.19 & 1.50 \\
+66 & seasonal & 0.27 & 1.39 & 1.65 \\
+\midrule
+252 & gbm\_low\_vol & 0.18 & 1.01 & 1.41 \\
+252 & gbm\_high\_vol & 0.22 & 1.18 & 1.57 \\
+252 & t\_garch & 0.44 & 0.51 & 0.78 \\
+252 & mixture\_normal & 0.34 & 1.24 & 1.44 \\
+252 & seasonal & 0.21 & 1.44 & 1.86 \\
+\bottomrule
+\end{tabular}
+}

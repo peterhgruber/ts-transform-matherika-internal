@@ -1,9 +1,9 @@
 # ------------------------------------------------------------------------------
 # Innosuisse Project: Usability of Transformer Models for Modelling Commodity Markets
-# Date: July 9, 2025
-# Authors: Peter Gruber (peter.gruber@usi.ch), Alessandro Dodon (alessandro.dodon@usi.ch)
+# Date: July 16, 2025
+# Authors: Peter Gruber, Alessandro Dodon
 #
-#  This script defines the data generation process (DGP) for simulating price series
+# Script: Generate simulated data (series and paths) based on config YAML
 # ------------------------------------------------------------------------------
 
 
@@ -12,115 +12,109 @@
 # ------------------------------------------------------------------------------
 import os
 import numpy as np
-import pandas as pd
-from utils.sim_utils import *
+import argparse
+import yaml
+from pathlib import Path
+from utils.simulations import *
+import inspect
 
 
 # ------------------------------------------------------------------------------
-# Global parameters
+# CLI input
 # ------------------------------------------------------------------------------
-trading_days = 1000
-forecast_days = 22
-n_samples = 1000
-initial_price = 100.0
-seed = 42
+parser = argparse.ArgumentParser()
+parser.add_argument("--sim_file", default="jobs/sim_00.yaml")
+args = parser.parse_args()
+
+with open(args.sim_file, "r") as f:
+    config = yaml.safe_load(f)
+
+sim_name = Path(args.sim_file).stem
 
 
 # ------------------------------------------------------------------------------
 # Output folders
 # ------------------------------------------------------------------------------
-os.makedirs("data/simulated_prices", exist_ok=True)
-os.makedirs("data/simulated_paths", exist_ok=True)
+base_dir = f"data/{sim_name}"
+series_price_dir = f"{base_dir}/prices_simulated_series"
+series_return_dir = f"{base_dir}/returns_simulated_series"
+paths_price_dir = f"{base_dir}/prices_simulated_paths"
+paths_return_dir = f"{base_dir}/returns_simulated_paths"
+
+os.makedirs(series_price_dir, exist_ok=True)
+os.makedirs(series_return_dir, exist_ok=True)
+os.makedirs(paths_price_dir, exist_ok=True)
+os.makedirs(paths_return_dir, exist_ok=True)
 
 
 # ------------------------------------------------------------------------------
-# Simulation configurations
+# Run all DGPs
 # ------------------------------------------------------------------------------
-dgp_configs = {
-    "gbm_low_vol": lambda: simulate_gbm_prices(
-        trading_days, initial_price,
-        drift=0.0 / trading_days,
-        volatility=0.15 / np.sqrt(trading_days),
-        seed=seed),
+for dgp_config in config["dgps"]:
+    dgp_name = dgp_config["name"]
+    dgp_type = dgp_config["type"]
+    dgp_params = dgp_config.get("params", {})
+    path_params = dgp_config.get("forecast_params", {})
+    seed = config["seed"]
+    trading_days = config["trading_days"]
+    forecast_days = config["forecast_days"]
+    n_samples = config["n_samples"]
+    initial_price = config["initial_price"]
 
-    "gbm_high_vol": lambda: simulate_gbm_prices(
-        trading_days, initial_price,
-        drift=0.0 / trading_days,
-        volatility=0.80 / np.sqrt(trading_days),
-        seed=seed),
+    print(f"[DGP] Generating: {dgp_name} (type={dgp_type})")
 
-    "t_garch": lambda: simulate_t_garch_prices(
-        trading_days, initial_price,
-        omega=0.00001, alpha=0.15, beta=0.8,
-        volatility_start=0.01, degrees_freedom=3,
-        seed=seed),
-
-    "mixture_normal": lambda: simulate_mixture_normal_prices(
-        trading_days, initial_price,
-        means=[0.0, -0.002], std_devs=[0.01, 0.03],
-        weights=[0.9, 0.1], seed=seed),
-
-    "constant": lambda: simulate_constant_prices(
-        trading_days, initial_price),
-
-    "linear": lambda: simulate_linear_prices(
-        trading_days, initial_price, daily_return=0.0005),
-
-    "seasonal": lambda: simulate_seasonal_prices(
-        trading_days, initial_price,
-        amplitude=0.02, frequency=1/60,
-        trend=0.00005, noise_std=0.03, seed=seed)
-}
+    # Simulate price series
+    simulate_func = globals()[f"simulate_{dgp_type}_prices"]
+    # Call simulate function with or without seed, depending on its signature
+    simulate_signature = inspect.signature(simulate_func)
+    if "seed" in simulate_signature.parameters:
+        series = simulate_func(trading_days, initial_price, seed=seed, **dgp_params)
+    else:
+        series = simulate_func(trading_days, initial_price, **dgp_params)
 
 
-# ------------------------------------------------------------------------------
-# Run and save all simulations
-# ------------------------------------------------------------------------------
-for dgp_name, dgp_func in dgp_configs.items():
-    series = dgp_func()
-    price_path = f"data/simulated_prices/{dgp_name}_seed{seed}.csv"
+    price_path = f"{series_price_dir}/prices_{dgp_name}_seed{seed}.csv"
     series.to_csv(price_path, index=False, float_format="%.8f")
-    print(f"Saved: {price_path}")
+    print(f"[SAVED] {price_path}")
+
+    # Compute returns
+    returns = series.pct_change().dropna().reset_index(drop=True)
+    returns_path = f"{series_return_dir}/returns_{dgp_name}_seed{seed}.csv"
+    returns.to_csv(returns_path, index=False, float_format="%.8f")
+    print(f"[SAVED] {returns_path}")
+
+    # Skip path simulation if not required
+    if not dgp_config.get("generate_paths", True):
+        continue
 
     base_price = series.iloc[-1]
 
-    if dgp_name in ["constant", "linear"]:
-        continue
+    forecast_func = globals()[f"forecast_{dgp_type}_paths"]
 
-    if dgp_name == "gbm_low_vol":
-        paths = forecast_gbm_paths(base_price, forecast_days, n_samples,
-                                   drift=0.0 / trading_days,
-                                   volatility=0.15 / np.sqrt(trading_days),
-                                   seed=seed)
+    # Special case: dynamic last_return and last_volatility for t_garch
+    if dgp_type == "t_garch":
+        last_return = returns.iloc[-1]
+        last_volatility = dgp_params.get("volatility_start", 0.01)
+        path_params = {
+            **path_params,
+            "last_return": last_return,
+            "last_volatility": last_volatility
+        }
 
-    elif dgp_name == "gbm_high_vol":
-        paths = forecast_gbm_paths(base_price, forecast_days, n_samples,
-                                   drift=0.0 / trading_days,
-                                   volatility=0.80 / np.sqrt(trading_days),
-                                   seed=seed)
+    # Forecast paths
+    paths = forecast_func(
+        base_price,
+        forecast_days,
+        n_samples,
+        seed=seed,
+        **path_params
+    )
 
-    elif dgp_name == "t_garch":
-        paths = forecast_t_garch_paths(
-            base_price, forecast_days, n_samples,
-            omega=0.00001, alpha=0.15, beta=0.8,
-            last_volatility=0.01, last_return=0.0,
-            degrees_freedom=3, seed=seed)
+    price_paths_file = f"{paths_price_dir}/prices_{dgp_name}_seed{seed}.npy"
+    np.save(price_paths_file, paths.astype(np.float64))
+    print(f"[SAVED] {price_paths_file}")
 
-    elif dgp_name == "mixture_normal":
-        paths = forecast_mixture_normal_paths(
-            base_price, forecast_days, n_samples,
-            means=[0.0, -0.002], std_devs=[0.01, 0.03],
-            weights=[0.9, 0.1], seed=seed)
-
-    elif dgp_name == "seasonal":
-        paths = forecast_seasonal_paths(
-            base_price, forecast_days, n_samples,
-            amplitude=0.02, frequency=1/60,
-            trend=0.00005, noise_std=0.03, seed=seed)
-
-    else:
-        continue
-
-    path_file = f"data/simulated_paths/{dgp_name}_seed{seed}.npy"
-    np.save(path_file, paths.astype(np.float64))
-    print(f"Saved: {path_file}")
+    returns_paths = (paths[:, 1:] / paths[:, :-1]) - 1
+    returns_paths_file = f"{paths_return_dir}/returns_{dgp_name}_seed{seed}.npy"
+    np.save(returns_paths_file, returns_paths.astype(np.float64))
+    print(f"[SAVED] {returns_paths_file}")

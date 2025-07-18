@@ -1,9 +1,9 @@
 # ------------------------------------------------------------------------------
 # Innosuisse Project: Usability of Transformer Models for Modelling Commodity Markets
-# Date: June 29, 2025
+# Date: July 16, 2025
 # Authors: Peter Gruber (peter.gruber@usi.ch), Alessandro Dodon (alessandro.dodon@usi.ch)
 #
-# This script defines the simulation functions used in all experiments.
+# This script defines the evaluation functions used in all experiments.
 # ------------------------------------------------------------------------------
 
 
@@ -24,35 +24,21 @@ warnings.filterwarnings('ignore')
 # ------------------------------------------------------------------------------
 # Additional metrics: mean, std for selected days
 # ------------------------------------------------------------------------------
-def summarize_selected_day_returns(samples, selected_days):
+def summarize_selected_day_returns(samples, selected_days, is_price_data=True):
     """
-    Print mean and standard deviation of forecasted daily returns
-    for specific forecast days.
+    Compute mean and std of daily returns for selected forecast days.
 
     Parameters:
-    - samples: np.ndarray of shape (n_samples, n_days)
-        Matrix of simulated forecast paths. Each row represents one full path
-        of forecasted prices over `n_days`, and each column represents a specific
-        forecast day (e.g. Day 1, Day 2, ..., Day 22).
-    
+    - samples: np.ndarray, shape (n_samples, n_days)
     - selected_days: list of int
-        Indices referring to the day of the return to analyze, i.e. index 0 means
-        return from Day 1 to Day 2, index 10 means return from Day 11 to Day 12.
-
-    Returns:
-    - summary: dict
-        Dictionary mapping each selected day index to its mean and std of returns.
-
-    Notes:
-    - Daily returns are computed as (price_t+1 / price_t - 1) for each row (path).
-    - This yields a return matrix of shape (n_samples, n_days - 1).
-    - For each `day` in `selected_days`, we extract the corresponding column of
-      the return matrix and compute statistics across all paths (i.e., row-wise).
-    - The mean and standard deviation are printed in percentage format.
+    - is_price_data: bool, whether samples are prices or already returns
     """
-    daily_returns = samples[:, 1:] / samples[:, :-1] - 1
-    summary = {}
+    if is_price_data:
+        daily_returns = samples[:, 1:] / samples[:, :-1] - 1
+    else:
+        daily_returns = samples
 
+    summary = {}
     print("=== Return Summary for Selected Days ===")
     for day in selected_days:
         returns = daily_returns[:, day]
