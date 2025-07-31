@@ -1,12 +1,3 @@
-# ------------------------------------------------------------------------------
-# Innosuisse Project: Usability of Transformer Models for Modelling Commodity Markets
-# Date: June 29, 2025
-# Authors: Peter Gruber (peter.gruber@usi.ch), Alessandro Dodon (alessandro.dodon@usi.ch)
-#
-# This script defines the simple forecasting function for Moirai.
-# ------------------------------------------------------------------------------
-
-
 #--------------------------------------------------------------------------------
 # Packages
 # ------------------------------------------------------------------------------
@@ -14,6 +5,7 @@ import numpy as np
 import pandas as pd
 from gluonts.dataset.pandas import PandasDataset
 from uni2ts.model.moirai import MoiraiForecast, MoiraiModule
+
 
 #--------------------------------------------------------------------------------
 # Moirai forecast function 

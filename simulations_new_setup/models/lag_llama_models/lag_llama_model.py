@@ -1,13 +1,4 @@
 # ------------------------------------------------------------------------------
-# Innosuisse Project: Usability of Transformer Models for Modelling Commodity Markets
-# Date: June 29, 2025
-# Authors: Peter Gruber, Alessandro Dodon
-#
-# This script loads Lag-Llama and defines the simple forecasting function.
-# ------------------------------------------------------------------------------
-
-
-# ------------------------------------------------------------------------------
 # Setup
 # ------------------------------------------------------------------------------
 import os
@@ -32,6 +23,7 @@ HF_CACHE = WORKING_DIR / "huggingface"
 # Add to sys.path
 sys.path.append(str(REPO_PATH))
 os.makedirs(WORKING_DIR, exist_ok=True)
+
 
 # ------------------------------------------------------------------------------
 # Clone repo if missing

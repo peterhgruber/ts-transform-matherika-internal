@@ -1,13 +1,4 @@
 # ------------------------------------------------------------------------------
-# Innosuisse Project: Usability of Transformer Models for Modelling Commodity Markets
-# Date: June 29, 2025
-# Authors: Peter Gruber, Alessandro Dodon
-#
-# This script defines the Toto forecasting function using the official open model.
-# ------------------------------------------------------------------------------
-
-
-# ------------------------------------------------------------------------------
 # Packages
 # ------------------------------------------------------------------------------
 import os

@@ -1,0 +1,7 @@
+run_name = forecast_165
+model_name = moirai_model_base
+dataset_name = t_garch
+target_type = prices
+context_length = 66
+prediction_days = 22
+forecast_samples = 1000

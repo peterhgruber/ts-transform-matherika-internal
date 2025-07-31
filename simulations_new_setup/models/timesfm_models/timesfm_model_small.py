@@ -1,13 +1,4 @@
 # ------------------------------------------------------------------------------
-# Innosuisse Project: Usability of Transformer Models for Modelling Commodity Markets
-# Date: June 29, 2025
-# Authors: Peter Gruber (peter.gruber@usi.ch), Alessandro Dodon (alessandro.dodon@usi.ch)
-#
-# This script defines the simple forecasting function for TimesFM.
-# ------------------------------------------------------------------------------
-
-
-# ------------------------------------------------------------------------------
 # Packages
 # ------------------------------------------------------------------------------
 import timesfm

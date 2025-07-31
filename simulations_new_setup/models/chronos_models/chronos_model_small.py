@@ -1,14 +1,4 @@
 # ------------------------------------------------------------------------------
-# Innosuisse Project: Usability of Transformer Models for Modelling Commodity Markets
-# Date: July 9, 2025
-# Authors: Peter Gruber (peter.gruber@usi.ch), Alessandro Dodon (alessandro.dodon@usi.ch)
-#
-# This script defines the Chronos MLX pipeline and a simple forecasting function
-# optimized for Apple Silicon using the experimental MLX backend.
-# ------------------------------------------------------------------------------
-
-
-# ------------------------------------------------------------------------------
 # Packages
 # ------------------------------------------------------------------------------
 import numpy as np

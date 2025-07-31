@@ -1,17 +1,7 @@
 # ------------------------------------------------------------------------------
-# Innosuisse Project: Usability of Transformer Models for Modelling Commodity Markets
-# Date: June 29, 2025
-# Authors: Peter Gruber (peter.gruber@usi.ch), Alessandro Dodon (alessandro.dodon@usi.ch)
-#
-# This script sets up TiRex and defines the forecasting function.
-# ------------------------------------------------------------------------------
-
-
-# ------------------------------------------------------------------------------
 # Packages
 # ------------------------------------------------------------------------------
 import os
-import sys
 import torch
 import numpy as np
 from scipy.interpolate import interp1d

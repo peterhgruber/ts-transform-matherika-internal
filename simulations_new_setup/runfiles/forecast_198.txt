@@ -1,0 +1,7 @@
+run_name = forecast_198
+model_name = toto_model
+dataset_name = t_garch
+target_type = returns
+context_length = 252
+prediction_days = 22
+forecast_samples = 1000

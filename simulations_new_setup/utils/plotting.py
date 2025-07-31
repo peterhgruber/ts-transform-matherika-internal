@@ -1,13 +1,4 @@
 # ------------------------------------------------------------------------------
-# Innosuisse Project: Usability of Transformer Models for Modelling Commodity Markets
-# Date: July 16, 2025
-# Authors: Peter Gruber (peter.gruber@usi.ch), Alessandro Dodon (alessandro.dodon@usi.ch)
-#
-# This script defines the plotting and formatting functions used in all experiments.
-# ------------------------------------------------------------------------------
-
-
-# ------------------------------------------------------------------------------
 # Packages
 # ------------------------------------------------------------------------------
 import numpy as np
@@ -68,6 +59,7 @@ def plot_forecast(series, low, median, high, figsize=(10, 4),
 
     if path:
         plt.savefig(path, dpi=300, bbox_inches='tight')
+        plt.close()
 
 
 # ------------------------------------------------------------------------------
@@ -100,6 +92,7 @@ def plot_daily_return_kdes(samples, selected_days,
     plt.tight_layout()
     if path:
         plt.savefig(path, dpi=300, bbox_inches='tight')
+        plt.close()
 
 
 # ------------------------------------------------------------------------------
@@ -138,10 +131,11 @@ def plot_daily_return_cdfs(samples, selected_days,
     plt.tight_layout()
     if path:
         plt.savefig(path, dpi=300, bbox_inches='tight')
+        plt.close()
 
 
 # ------------------------------------------------------------------------------
-# Plotting Divergence Test for Multiple Days
+# Plotting Divergence Test 
 # ------------------------------------------------------------------------------
 def plot_multiple_return_kde_comparison(dgp_samples, model_samples, selected_days,
                                         dgp_type=None, context_length=None, path="",
@@ -178,3 +172,125 @@ def plot_multiple_return_kde_comparison(dgp_samples, model_samples, selected_day
     plt.tight_layout()
     if path:
         plt.savefig(path, dpi=300, bbox_inches='tight')
+        plt.close()
+
+
+# ------------------------------------------------------------------------------
+# KL Divergence vs Context Length Plot 
+# ------------------------------------------------------------------------------
+def plot_kl_vs_context(kl_dataframe, output_path, target_type_label):
+    """
+    Create bar plots of KL divergence vs context length for each model and day.
+
+    Parameters:
+        kl_dataframe (pd.DataFrame): Must include:
+            ["context_length", "dgp_type", "model_name", "day", "kl_divergence"]
+        output_path (Path): Folder where to save plots
+        target_type_label (str): Either "prices" or "returns"
+    """
+    output_path.mkdir(parents=True, exist_ok=True)
+    grouped_models = kl_dataframe.groupby("model_name")
+
+    for model_name, model_df in grouped_models:
+        grouped_days = model_df.groupby("day")
+
+        for day_label, day_df in grouped_days:
+            plt.figure(figsize=(10, 5))
+
+            sns.barplot(
+                data=day_df,
+                x="context_length",
+                y="kl_divergence",
+                hue="dgp_type",
+                ci=None,
+                palette="tab10"
+            )
+
+            plt.title(f"{model_name} — {target_type_label} — {day_label}")
+            plt.xlabel("Context Length")
+            plt.ylabel("KL Divergence")
+            plt.legend(title="DGP", bbox_to_anchor=(1.05, 1), loc="upper left")
+            plt.tight_layout()
+
+            filename = output_path / f"kl_barplot_{model_name}_{target_type_label}_{day_label.replace(' ', '')}.png"
+            plt.savefig(filename, dpi=300)
+            plt.close()
+
+
+# ------------------------------------------------------------------------------
+# KL Divergence vs Models 
+# ------------------------------------------------------------------------------
+def plot_model_comparison_bar_avg(df_kl, output_path, target_type_label, selected_days):
+    """
+    Plot average KL divergence per model (horizontal bars), grouped by DGP and context length.
+    Models are shown via legend (cleaner than x-axis).
+    """
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    df_avg = (
+        df_kl[df_kl["day"].isin([f"Day {i + 2}" for i in selected_days])]
+        .groupby(["context_length", "dgp_type", "model_name"])["kl_divergence"]
+        .mean()
+        .reset_index(name="avg_kl")
+    )
+
+    for (dgp_name, context_val), group_df in df_avg.groupby(["dgp_type", "context_length"]):
+        plot_df = group_df.sort_values("avg_kl")
+
+        plt.figure(figsize=(8, 6))
+        bars = plt.bar(
+            x=np.arange(len(plot_df)),
+            height=plot_df["avg_kl"],
+            color=sns.color_palette("viridis", len(plot_df))
+        )
+
+        # Legend with model names
+        plt.legend(
+            bars,
+            plot_df["model_name"],
+            title="Model",
+            bbox_to_anchor=(1.05, 1),
+            loc='upper left',
+            borderaxespad=0.
+        )
+
+        plt.ylabel("Average KL Divergence")
+        plt.xlabel("Model Index")
+        plt.title(f"{dgp_name} — {target_type_label} — Context {context_val}")
+        plt.tight_layout()
+
+        filename = output_path / f"model_bar_avg_{target_type_label}_{dgp_name}_context{context_val}.png"
+        plt.savefig(filename, dpi=300)
+        plt.close()
+
+
+# ------------------------------------------------------------------------------
+# KL Divergence vs Volatility  
+# ------------------------------------------------------------------------------
+def plot_kl_bar_by_vol(df_kl, output_path, target_type_label, fixed_context):
+    df_filtered = df_kl[df_kl["context_length"] == fixed_context]
+    grouped = df_filtered.groupby("model_name")
+
+    for model_name, model_df in grouped:
+        for day, day_df in model_df.groupby("day"):
+            df_day = day_df.copy()
+            df_day = df_day.sort_values("volatility")
+
+            plt.figure(figsize=(8, 5))
+            sns.barplot(
+                data=df_day,
+                x="volatility",
+                y="kl_divergence",
+                hue="dgp_type",
+                palette="viridis"
+            )
+            plt.title(f"{model_name} — {target_type_label} — {day} (context {fixed_context})")
+            plt.xlabel("Annualized Volatility")
+            plt.ylabel("KL Divergence")
+            plt.legend(title="DGP Type", bbox_to_anchor=(1.05, 1), loc="upper left")
+            plt.tight_layout()
+
+            filename = output_path / f"kl_bar_vol_{model_name}_{target_type_label}_{day.replace(' ', '')}_context{fixed_context}.png"
+            plt.savefig(filename, dpi=300)
+            plt.close()
+

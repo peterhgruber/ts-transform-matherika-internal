@@ -1,13 +1,4 @@
 # ------------------------------------------------------------------------------
-# Innosuisse Project: Usability of Transformer Models for Modelling Commodity Markets
-# Date: July 16, 2025
-# Authors: Peter Gruber (peter.gruber@usi.ch), Alessandro Dodon (alessandro.dodon@usi.ch)
-#
-# This script defines the evaluation functions used in all experiments.
-# ------------------------------------------------------------------------------
-
-
-# ------------------------------------------------------------------------------
 # Packages
 # ------------------------------------------------------------------------------
 import numpy as np
@@ -137,18 +128,17 @@ def format_pivot_table(raw_table, selected_days, dgp_order=None):
 
 
 # ------------------------------------------------------------------------------
-# Latex conversion for DataFrame
+# Latex conversion for DataFrame (Flexible Index Support)
 # ------------------------------------------------------------------------------
-def dataframe_to_latex(dataframe, output_path):
+def dataframe_to_latex(dataframe, output_path, preserve_index_order=False):
     """
-    Converts a pivoted DataFrame (with possibly multi or single index columns)
-    into a clean academic-style LaTeX table.
+    Converts a DataFrame with multi-index to a LaTeX tabular format.
 
-    Required LaTeX packages (add to your preamble in Overleaf):
-    \\usepackage{booktabs}     % for \\toprule, \\midrule, \\bottomrule
-    \\usepackage{graphicx}     % for \\resizebox
-    \\usepackage{array}        % for column formatting tweaks
-    \\usepackage{caption}      % for nicer table captions (optional)
+    Parameters:
+        dataframe (pd.DataFrame): Pivoted and optionally pre-sorted DataFrame.
+        output_path (Path): Output .tex file location.
+        preserve_index_order (bool): If True, row order is preserved as-is.
+                                     If False, standard alphabetical sort is applied.
     """
     def latex_escape(text):
         if isinstance(text, str):
@@ -157,40 +147,41 @@ def dataframe_to_latex(dataframe, output_path):
 
     table_copy = dataframe.copy().round(2)
 
-    # Escape and analyze columns
+    # Escape column names
     if isinstance(table_copy.columns, pd.MultiIndex):
         table_copy.columns = pd.MultiIndex.from_tuples([
             tuple(latex_escape(col) for col in col_tuple)
             for col_tuple in table_copy.columns
         ])
         column_tuples = table_copy.columns.tolist()
-        day_groups = []
-        subheaders = []
-        for day, label in column_tuples:
-            day_groups.append(day)
-            subheaders.append(label)
+        day_groups = [day for day, _ in column_tuples]
+        subheaders = [label for _, label in column_tuples]
     else:
-        # Single-level columns
         table_copy.columns = [latex_escape(col) for col in table_copy.columns]
         day_groups = table_copy.columns
-        subheaders = ["KL divergence"] * len(day_groups)
+        subheaders = ["Value"] * len(day_groups)
 
-    # Escape index values
+    # Escape row index values
     table_copy.index = pd.MultiIndex.from_tuples([
-        (row[0], latex_escape(row[1])) for row in table_copy.index
-    ], names=["context_length", "dgp_type"])
+        tuple(latex_escape(val) for val in row)
+        for row in table_copy.index
+    ], names=table_copy.index.names)
 
-    # Convert values to strings with 2 decimals
+    # Control row sorting
+    if not preserve_index_order:
+        sort_levels = [level for level in ["model_name", "dgp_type", "context_length"] if level in table_copy.index.names]
+        table_copy = table_copy.sort_index(level=sort_levels)
+
+    # Convert values to strings
     table_copy = table_copy.applymap(lambda x: f"{x:.2f}")
 
-    # Column count
+    # Column count for header
     col_count = table_copy.shape[1]
+    num_index_cols = len(table_copy.index.names)
+    header = "\\resizebox{\\textwidth}{!}{%\n\\begin{tabular}{" + "l" * num_index_cols + "r" * col_count + "}\n\\toprule\n"
 
-    # LaTeX preamble
-    header = "\\resizebox{\\textwidth}{!}{%\n\\begin{tabular}{" + "ll" + "r" * col_count + "}\n\\toprule\n"
-
-    # Compose group header
-    header += " & " * 2  # for index columns
+    # Column group headers (top row)
+    header += " & " * num_index_cols
     last_group = None
     span = 0
     spans = []
@@ -209,20 +200,30 @@ def dataframe_to_latex(dataframe, output_path):
         header += f"\\multicolumn{{{width}}}{{l}}{{{group}}} & "
     header = header.rstrip("& ") + " \\\\\n"
 
-    # Compose subheader
-    header += "context\\_length & dgp\\_type & " + " & ".join(subheaders) + " \\\\\n\\midrule\n"
+    # Subheaders (second row)
+    index_headers = [col.replace("_", "\\_") for col in table_copy.index.names]
+    header += " & ".join(index_headers) + " & " + " & ".join(subheaders) + " \\\\\n\\midrule\n"
 
-    # Compose rows
+    # Row data
     lines = []
-    last_context = None
-    for (context_length, dgp_type), row in table_copy.iterrows():
-        if last_context is not None and context_length != last_context:
+    last_key = None
+
+    for index_tuple, row in table_copy.iterrows():
+        index_names = table_copy.index.names
+        index_dict = dict(zip(index_names, index_tuple))
+        current_key = tuple(index_dict.get(k, "") for k in ["model_name", "dgp_type"])
+
+        if last_key and current_key != last_key:
             lines.append("\\midrule")
-        last_context = context_length
+        last_key = current_key
+
+        index_values = [str(index_dict.get(col, "")) for col in index_names]
         row_values = " & ".join(row.tolist())
-        lines.append(f"{context_length} & {dgp_type} & {row_values} \\\\")
+        lines.append(f"{' & '.join(index_values)} & {row_values} \\\\")
 
     footer = "\n\\bottomrule\n\\end{tabular}\n}"
 
     with open(output_path, "w") as f:
         f.write(header + "\n".join(lines) + footer)
+
+
