@@ -24,3 +24,7 @@ Internal repo for TSFM project
 	* Risk management for market timing
 	* Ask client to allow for a price margin
 * Onboarding?
+
+## New Research Questions
+
+- Do TSFMs capture technical analysis on stocks?
