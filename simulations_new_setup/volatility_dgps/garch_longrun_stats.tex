@@ -1,0 +1,18 @@
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lllrrrrrr}
+\toprule
+ &  &  & \multicolumn{1}{l}{omega} & \multicolumn{1}{l}{alpha} & \multicolumn{1}{l}{beta} & \multicolumn{1}{l}{alpha\_plus\_beta} & \multicolumn{1}{l}{long\_run\_vol\_\%} & \multicolumn{1}{l}{half\_life\_days} \\
+model\_name & dgp\_type & context\_length & Value & Value & Value & Value & Value & Value \\
+\midrule
+GARCH(1,1)-normal & gbm\_high\_vol & 1000 & 0.28 & 0.00 & 0.99 & 0.99 & 4.96 & 59.80 \\
+\midrule
+GARCH(1,1)-normal & gbm\_low\_vol & 1000 & 0.01 & 0.00 & 0.98 & 0.98 & 0.49 & 30.10 \\
+\midrule
+GARCH(1,1)-normal & mixture\_normal & 1000 & 0.61 & 0.00 & 0.08 & 0.08 & 0.81 & 0.28 \\
+\midrule
+GARCH(1,1)-normal & seasonal & 1000 & 0.08 & 0.00 & 0.98 & 0.98 & 1.97 & 32.66 \\
+\midrule
+GARCH(1,1)-normal & t\_garch & 1000 & 0.04 & 0.10 & 0.86 & 0.96 & 1.00 & 15.21 \\
+\bottomrule
+\end{tabular}
+}
