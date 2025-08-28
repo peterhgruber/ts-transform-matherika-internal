@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import warnings
 warnings.filterwarnings('ignore')
+import pandas as pd
+from pathlib import Path
 
 
 # ------------------------------------------------------------------------------
@@ -60,6 +62,53 @@ def plot_forecast(series, low, median, high, figsize=(10, 4),
     if path:
         plt.savefig(path, dpi=300, bbox_inches='tight')
         plt.close()
+
+
+# ------------------------------------------------------------------------------
+# Plotting Volatilities 
+# ------------------------------------------------------------------------------
+def plot_volatilities_percent(vol_ma: pd.Series,
+                              vol_ewma: pd.Series,
+                              vol_garch: pd.Series,
+                              title_text: str,
+                              save_path: Path,
+                              figsize: tuple = (10, 5)):
+    """
+    GARCH red solid, EWMA blue dotted, MA black dashed (thicker). Values in percent.
+    """
+    df = pd.concat([vol_ma, vol_ewma, vol_garch], axis=1).dropna()
+    if df.empty:
+        print(f"[WARN] Nothing to plot for {title_text} (all NaNs).")
+        return
+    idx = np.arange(len(df))
+
+    plt.figure(figsize=figsize, dpi=300)
+
+    # GARCH
+    plt.plot(idx, 100 * df.iloc[:, 2].values, label="GARCH (1,1)",
+             color="red", linewidth=1.4, linestyle="-")
+    # EWMA
+    plt.plot(idx, 100 * df.iloc[:, 1].values, label=df.columns[1],
+             color="blue", linewidth=1.4, linestyle=":")
+    # MA
+    plt.plot(idx, 100 * df.iloc[:, 0].values, label=df.columns[0],
+             color="black", linewidth=2.0, linestyle="--")
+
+    ax = plt.gca()
+    for side in ["top", "bottom", "left", "right"]:
+        ax.spines[side].set_visible(True)
+        ax.spines[side].set_color("black")
+        ax.spines[side].set_linewidth(1)
+    ax.tick_params(width=0.8, color="black")
+
+    plt.title(title_text, loc="left", fontsize=13)
+    plt.xlabel("Time")
+    plt.ylabel("Volatility (%)")
+    plt.grid(True, linewidth=0.3)
+    plt.legend(frameon=True, edgecolor="black")
+    plt.tight_layout()
+    plt.savefig(save_path, dpi=300, bbox_inches="tight")
+    plt.close()
 
 
 # ------------------------------------------------------------------------------
