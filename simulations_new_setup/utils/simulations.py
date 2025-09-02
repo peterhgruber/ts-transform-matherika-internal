@@ -194,7 +194,7 @@ def simulate_gbm_prices(time_steps=100, initial_value=100.0,
     return pd.Series(prices)
 
 
-# PART 2: SIMULATING MULTIPLE PATHS
+# PART 2: SIMULATING MULTIPLE PRICE PATHS
 
 # ------------------------------------------------------------------------------
 # Simulate multiple paths using seasonal series with noise
@@ -359,7 +359,7 @@ def forecast_gbm_prices_paths(base_price, forecast_days=22, n_samples=1000,
     return price_paths
 
 
-# PART 2: SIMULATING RETURNS
+# PART 3: SIMULATING RETURNS
 
 
 # ------------------------------------------------------------------------------
@@ -521,6 +521,9 @@ def simulate_t_garch_returns(time_steps=100,
         volatility[t_index] = np.sqrt(omega + alpha * returns[t_index - 1]**2 + beta * volatility[t_index - 1]**2)
 
     return pd.Series(returns)
+
+
+# PART 4: SIMULATING RETURN PATHS
 
 
 # ------------------------------------------------------------------------------
