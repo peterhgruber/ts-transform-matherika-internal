@@ -1,0 +1,7 @@
+run_name = forecast_310
+model_name = moirai_model_base_1_1
+dataset_name = t_garch
+target_type = returns
+context_length = 66
+prediction_days = 22
+forecast_samples = 1000

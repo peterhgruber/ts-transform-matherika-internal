@@ -1,6 +1,6 @@
 run_name = forecast_254
-model_name = timesfm_model_small
-dataset_name = t_garch
+model_name = moirai_model_small_1_1
+dataset_name = gbm_low_vol
 target_type = returns
 context_length = 22
 prediction_days = 22

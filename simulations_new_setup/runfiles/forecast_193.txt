@@ -1,6 +1,6 @@
 run_name = forecast_193
-model_name = toto_model
-dataset_name = t_garch
+model_name = moirai_model_base
+dataset_name = garch
 target_type = prices
 context_length = 22
 prediction_days = 22

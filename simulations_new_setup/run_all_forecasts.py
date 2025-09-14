@@ -24,6 +24,14 @@ warnings.filterwarnings("ignore")
 # Main
 # ------------------------------------------------------------------------------
 def main():
+    """
+    Forecast runner:
+    - Reads runfiles/forecast_*.txt
+    - Skips TimesFM jobs and Moirai2 jobs
+    - Skips jobs whose output forecasts/<run_name>.pkl already exists
+    - Imports model module dynamically and runs the first forecast_* function found
+    - Saves results to forecasts/<run_name>.pkl
+    """
     runfile_folder = Path("runfiles")
     runfiles = sorted(runfile_folder.glob("forecast_*.txt"))
     logging.info(f"Found {len(runfiles)} runfiles.")
@@ -41,12 +49,14 @@ def main():
                     value = value.strip()
                     try:
                         run_config[key] = eval(value)
-                    except:
+                    except Exception:
                         run_config[key] = value
 
         model_name = run_config.get("model_name", "")
-        if model_name.startswith("timesfm_model"):
-            continue  # Skip TimesFM
+
+        if model_name.startswith("timesfm_model") or model_name.startswith("moirai_model_small_2_0"):
+            continue  # Skip TimesFM and Moirai2
+
         grouped_runfiles[model_name].append((runfile_path, run_config))
 
     # Run models
@@ -66,10 +76,12 @@ def main():
             logging.error(f"Failed to import module for {model_name}: {e}")
             continue
 
+        # Find forecast function
         forecast_function = None
         for name in dir(model_module):
-            if name.startswith("forecast_") and callable(getattr(model_module, name)):
-                forecast_function = getattr(model_module, name)
+            attr = getattr(model_module, name)
+            if name.startswith("forecast_") and callable(attr):
+                forecast_function = attr
                 break
         if forecast_function is None:
             logging.error(f"No forecast_* function found in {model_name}")
@@ -85,6 +97,12 @@ def main():
             context_length = run_config["context_length"]
             prediction_days = run_config["prediction_days"]
             forecast_samples = run_config["forecast_samples"]
+
+            # Skip if the forecast pickle already exists
+            output_file = Path(f"forecasts/{run_name}.pkl")
+            if output_file.exists():
+                logging.info(f"[SKIP] Already computed: {output_file}")
+                continue
 
             logging.info(f"[RUN] {runfile_path.name} | Dataset: {dataset_name} | Context: {context_length}")
 
@@ -102,7 +120,8 @@ def main():
                 "prediction_days": prediction_days,
                 "n_samples": forecast_samples,
                 "pipeline": pipeline if "pipeline" in forecast_params else None,
-                "device": torch.device("cuda" if torch.cuda.is_available() else "cpu") if "device" in forecast_params else None
+                "device": torch.device("cuda" if torch.cuda.is_available() else "cpu")
+                          if "device" in forecast_params else None,
             }
             filtered_args = {k: v for k, v in args.items() if v is not None and k in forecast_params}
 
@@ -124,9 +143,7 @@ def main():
 
             result = round_result(result)
 
-            output_file = Path(f"forecasts/{run_name}.pkl")
             output_file.parent.mkdir(parents=True, exist_ok=True)
-
             with open(output_file, "wb") as f:
                 pickle.dump(result, f, protocol=pickle.HIGHEST_PROTOCOL)
 

@@ -124,6 +124,64 @@ def simulate_t_garch_prices(time_steps=100, initial_value=100.0,
 
 
 # ------------------------------------------------------------------------------
+# Simulate price time series using a GARCH(1,1) model for volatility
+# ------------------------------------------------------------------------------
+def simulate_garch_prices(time_steps=100, initial_value=100.0,
+                          omega=0.01, alpha=0.1, beta=0.85,
+                          volatility_start=0.02, seed=None):
+    """
+    Simulates a price time series using a GARCH(1,1) model with standard normal innovations.
+
+    Parameters
+    ----------
+    time_steps : int
+        Number of time steps to simulate (e.g., trading days).
+    initial_value : float
+        Initial price level.
+    omega : float
+        Constant term of the GARCH recursion (per time step).
+    alpha : float
+        ARCH coefficient on last-period squared return.
+    beta : float
+        GARCH coefficient on last-period variance.
+    volatility_start : float
+        Starting daily volatility (i.e., sqrt of variance) at t=0.
+    seed : int or None
+        Optional seed for reproducibility.
+
+    Returns
+    -------
+    pd.Series
+        Simulated price path of length `time_steps`.
+
+    Notes
+    -----
+    - Recursion:  sigma_t^2 = omega + alpha * r_{t-1}^2 + beta * sigma_{t-1}^2
+    - Innovation: z_t ~ N(0, 1),  r_t = sigma_{t-1} * z_t
+    - Price:      P_t = P_{t-1} * exp(r_t)
+    """
+    if seed is not None:
+        np.random.seed(seed)
+
+    prices = np.empty(time_steps)
+    returns = np.empty(time_steps)
+    volatility = np.empty(time_steps)
+
+    prices[0] = initial_value
+    volatility[0] = volatility_start
+    returns[0] = 0.0
+
+    for t_index in range(1, time_steps):
+        shock = np.random.standard_normal()
+        returns[t_index] = volatility[t_index - 1] * shock
+        variance_next = omega + alpha * returns[t_index - 1]**2 + beta * volatility[t_index - 1]**2
+        volatility[t_index] = np.sqrt(variance_next)
+        prices[t_index] = prices[t_index - 1] * np.exp(returns[t_index])
+
+    return pd.Series(prices)
+
+
+# ------------------------------------------------------------------------------
 # Simulate price time series using a mixture of normal distributions
 # ------------------------------------------------------------------------------
 def simulate_mixture_normal_prices(time_steps=100, initial_value=100.0,
@@ -278,6 +336,77 @@ def forecast_t_garch_prices_paths(base_price, forecast_days=22, n_samples=1000,
             shock = t.rvs(df=degrees_freedom)
             volatility[t_index] = np.sqrt(omega + alpha * returns[t_index - 1]**2 + beta * volatility[t_index - 1]**2)
             returns[t_index] = volatility[t_index] * shock / np.sqrt(degrees_freedom / (degrees_freedom - 2))
+            prices[t_index] = prices[t_index - 1] * np.exp(returns[t_index])
+
+        samples[path_index] = prices
+
+    return samples
+
+
+# ------------------------------------------------------------------------------
+# Simulate multiple paths using a GARCH(1,1) model
+# ------------------------------------------------------------------------------
+def forecast_garch_prices_paths(base_price, forecast_days=22, n_samples=1000,
+                                omega=0.01, alpha=0.1, beta=0.85,
+                                last_volatility=0.02, last_return=0.0,
+                                seed=None):
+    """
+    Forecast GARCH(1,1) price paths from a starting price, return, and volatility.
+
+    Parameters
+    ----------
+    base_price : float
+        Last observed price (level at forecast start).
+    forecast_days : int
+        Forecast horizon (number of steps to simulate).
+    n_samples : int
+        Number of simulated paths to generate.
+    omega, alpha, beta : float
+        Standard GARCH(1,1) parameters.
+    last_volatility : float
+        Volatility used to initialize the recursion (t=0).
+    last_return : float
+        Return used in the first-step variance update.
+    seed : int or None
+        Optional seed for reproducibility.
+
+    Returns
+    -------
+    np.ndarray
+        Array of shape (n_samples, forecast_days) with simulated prices.
+
+    Notes
+    -----
+    - First-step variance uses r_{-1} = last_return and sigma_{-1} = last_volatility.
+    - Shocks are standard normal; no scaling is applied (unlike the Student-t case).
+    """
+    if seed is not None:
+        np.random.seed(seed)
+
+    samples = np.empty((n_samples, forecast_days))
+
+    for path_index in range(n_samples):
+        prices = np.empty(forecast_days)
+        volatility = np.empty(forecast_days)
+        returns = np.empty(forecast_days)
+
+        # Initialize next-step variance from last observed state
+        variance_0 = omega + alpha * last_return**2 + beta * last_volatility**2
+        volatility[0] = np.sqrt(variance_0)
+
+        # Step 0
+        shock = np.random.standard_normal()
+        returns[0] = volatility[0] * shock
+        prices[0] = base_price * np.exp(returns[0])
+
+        # Steps 1..T-1
+        for t_index in range(1, forecast_days):
+            variance_next = omega + alpha * returns[t_index - 1]**2 + beta * volatility[t_index - 1]**2
+            volatility[t_index] = np.sqrt(variance_next)
+
+            shock = np.random.standard_normal()
+            returns[t_index] = volatility[t_index] * shock
+
             prices[t_index] = prices[t_index - 1] * np.exp(returns[t_index])
 
         samples[path_index] = prices
@@ -523,6 +652,50 @@ def simulate_t_garch_returns(time_steps=100,
     return pd.Series(returns)
 
 
+# ------------------------------------------------------------------------------
+# Simulate GARCH returns series
+# ------------------------------------------------------------------------------
+def simulate_garch_returns(time_steps=100,
+                           omega=0.01, alpha=0.1, beta=0.85,
+                           volatility_start=0.02, seed=None):
+    """
+    Simulates returns from a GARCH(1,1) volatility process with Gaussian innovations.
+
+    Parameters
+    ----------
+    time_steps : int
+        Number of time steps (e.g., days).
+    omega, alpha, beta : float
+        GARCH(1,1) parameters.
+    volatility_start : float
+        Initial volatility.
+    seed : int or None
+        Random seed.
+
+    Returns
+    -------
+    pd.Series
+        Simulated returns of shape (time_steps,).
+    """
+    if seed is not None:
+        np.random.seed(seed)
+
+    returns = np.empty(time_steps)
+    volatility = np.empty(time_steps)
+
+    volatility[0] = volatility_start
+    returns[0] = 0.0
+
+    for t_index in range(1, time_steps):
+        shock = np.random.standard_normal()
+        returns[t_index] = volatility[t_index - 1] * shock
+        volatility[t_index] = np.sqrt(
+            omega + alpha * returns[t_index - 1]**2 + beta * volatility[t_index - 1]**2
+        )
+
+    return pd.Series(returns)
+
+
 # PART 4: SIMULATING RETURN PATHS
 
 
@@ -667,6 +840,63 @@ def forecast_t_garch_returns_paths(forecast_days=22, n_samples=1000,
             shock = t.rvs(df=degrees_freedom)
             volatility[t_index] = np.sqrt(omega + alpha * returns[t_index - 1]**2 + beta * volatility[t_index - 1]**2)
             returns[t_index] = volatility[t_index] * shock / np.sqrt(degrees_freedom / (degrees_freedom - 2))
+
+        samples[path_index] = returns
+
+    return samples
+
+
+# ------------------------------------------------------------------------------
+# Forecast GARCH return paths
+# ------------------------------------------------------------------------------
+def forecast_garch_returns_paths(forecast_days=22, n_samples=1000,
+                                 omega=0.01, alpha=0.1, beta=0.85,
+                                 last_volatility=0.02, last_return=0.0,
+                                 seed=None):
+    """
+    Forecasts return paths using a GARCH(1,1) process with Gaussian shocks.
+
+    Parameters
+    ----------
+    forecast_days : int
+        Forecast horizon.
+    n_samples : int
+        Number of paths.
+    omega, alpha, beta : float
+        GARCH model parameters.
+    last_volatility : float
+        Volatility at forecast start.
+    last_return : float
+        Last observed return.
+    seed : int or None
+        Random seed.
+
+    Returns
+    -------
+    np.ndarray
+        Simulated returns of shape (n_samples, forecast_days).
+    """
+    if seed is not None:
+        np.random.seed(seed)
+
+    samples = np.empty((n_samples, forecast_days))
+
+    for path_index in range(n_samples):
+        returns = np.empty(forecast_days)
+        volatility = np.empty(forecast_days)
+
+        volatility[0] = np.sqrt(
+            omega + alpha * last_return**2 + beta * last_volatility**2
+        )
+        shock = np.random.standard_normal()
+        returns[0] = volatility[0] * shock
+
+        for t_index in range(1, forecast_days):
+            volatility[t_index] = np.sqrt(
+                omega + alpha * returns[t_index - 1]**2 + beta * volatility[t_index - 1]**2
+            )
+            shock = np.random.standard_normal()
+            returns[t_index] = volatility[t_index] * shock
 
         samples[path_index] = returns
 

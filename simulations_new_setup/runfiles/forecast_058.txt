@@ -1,6 +1,6 @@
 run_name = forecast_058
 model_name = chronos_model_mini
-dataset_name = seasonal
+dataset_name = t_garch
 target_type = returns
 context_length = 66
 prediction_days = 22

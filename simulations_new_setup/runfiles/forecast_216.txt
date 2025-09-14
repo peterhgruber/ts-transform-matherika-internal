@@ -1,6 +1,6 @@
 run_name = forecast_216
-model_name = tirex_model
-dataset_name = gbm_low_vol
+model_name = moirai_model_base
+dataset_name = seasonal
 target_type = returns
 context_length = 252
 prediction_days = 22

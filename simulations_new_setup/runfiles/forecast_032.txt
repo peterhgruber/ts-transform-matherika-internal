@@ -1,6 +1,6 @@
 run_name = forecast_032
-model_name = chronos_model_mini
-dataset_name = gbm_low_vol
+model_name = chronos_model_tiny
+dataset_name = seasonal
 target_type = returns
 context_length = 22
 prediction_days = 22

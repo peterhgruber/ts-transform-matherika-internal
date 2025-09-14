@@ -1,6 +1,6 @@
 run_name = forecast_146
 model_name = moirai_model_small
-dataset_name = seasonal
+dataset_name = gbm_low_vol
 target_type = returns
 context_length = 22
 prediction_days = 22

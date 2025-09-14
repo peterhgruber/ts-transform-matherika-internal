@@ -23,6 +23,14 @@ warnings.filterwarnings("ignore")
 # Main
 # ------------------------------------------------------------------------------
 def main():
+    """
+    Forecast runner (TimesFM-only):
+    - Reads runfiles/forecast_*.txt
+    - Selects only TimesFM jobs
+    - Skips jobs whose output forecasts/<run_name>.pkl already exists
+    - Imports model module dynamically and runs the first forecast_* function found
+    - Saves results to forecasts/<run_name>.pkl
+    """
     runfile_folder = Path("runfiles")
     runfiles = sorted(runfile_folder.glob("forecast_*.txt"))
     logging.info(f"Found {len(runfiles)} runfiles.")
@@ -40,11 +48,10 @@ def main():
                     value = value.strip()
                     try:
                         run_config[key] = eval(value)
-                    except:
+                    except Exception:
                         run_config[key] = value
 
         model_name = run_config.get("model_name", "")
-
         if model_name.startswith("timesfm_model"):
             grouped_runfiles[model_name].append((runfile_path, run_config))
 
@@ -66,6 +73,7 @@ def main():
             logging.error(f"Failed to import module for {model_name}: {e}")
             continue
 
+        # Find forecast function
         forecast_function = None
         for name in dir(model_module):
             if name.startswith("forecast_") and callable(getattr(model_module, name)):
@@ -86,6 +94,12 @@ def main():
             prediction_days = run_config["prediction_days"]
             forecast_samples = run_config["forecast_samples"]
 
+            # Skip if the forecast pickle already exists
+            output_file = Path(f"forecasts/{run_name}.pkl")
+            if output_file.exists():
+                logging.info(f"[SKIP] Already computed: {output_file}")
+                continue
+
             logging.info(f"[RUN] {runfile_path.name} | Dataset: {dataset_name} | Context: {context_length}")
 
             series_path = Path(f"datasets/{dataset_name}_{target_type}.csv")
@@ -100,7 +114,7 @@ def main():
                 "series": series,
                 "context_length": context_length,
                 "prediction_days": prediction_days,
-                "n_samples": forecast_samples
+                "n_samples": forecast_samples,
             }
             filtered_args = {k: v for k, v in args.items() if k in forecast_params}
 
@@ -122,9 +136,7 @@ def main():
 
             result = round_result(result)
 
-            output_file = Path(f"forecasts/{run_name}.pkl")
             output_file.parent.mkdir(parents=True, exist_ok=True)
-
             with open(output_file, "wb") as f:
                 pickle.dump(result, f, protocol=pickle.HIGHEST_PROTOCOL)
 

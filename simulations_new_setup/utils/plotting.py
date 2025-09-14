@@ -271,11 +271,65 @@ def plot_kl_vs_context(kl_dataframe, output_path, target_type_label):
 # ------------------------------------------------------------------------------
 def plot_model_comparison_bar_avg(df_kl, output_path, target_type_label, selected_days):
     """
-    Plot average KL divergence per model (horizontal bars), grouped by DGP and context length.
-    Models are shown via legend (cleaner than x-axis).
+    Plot average KL divergence per model (bars), grouped by DGP and context length.
+    Models share a family color (e.g., all Moirai shades of green), with
+    different shades per model within the family.
     """
     output_path.mkdir(parents=True, exist_ok=True)
 
+    # --- family → base colormap (choose distinct, readable palettes)
+    family_cmaps = {
+        "chronos": "Blues",
+        "moirai": "Greens",
+        "lag_llama": "Reds",
+        "toto": "Purples",
+        "tirex": "Oranges",
+        "timesfm": "Greys",
+        "other": "viridis",
+    }
+
+    def get_family(model_name: str) -> str:
+        """Map a model_name to a family label."""
+        if model_name.startswith("chronos"):
+            return "chronos"
+        if model_name.startswith("moirai"):
+            return "moirai"
+        if model_name.startswith("lag_llama"):
+            return "lag_llama"
+        if model_name.startswith("toto"):
+            return "toto"
+        if model_name.startswith("tirex"):
+            return "tirex"
+        if model_name.startswith("timesfm"):
+            return "timesfm"
+        return "other"
+
+    def assign_family_shades(model_names):
+        """
+        For the given ordered list of model_names, return a color per model:
+        same family → same colormap, different shades within that family.
+        """
+        # count models per family in THIS plot, to size palettes correctly
+        families = [get_family(m) for m in model_names]
+        unique_families = sorted(set(families), key=lambda f: families.index(f))  # preserve first occurrence order
+        counts_by_family = {fam: families.count(fam) for fam in unique_families}
+
+        # build palettes per family
+        palettes = {
+            fam: sns.color_palette(family_cmaps.get(fam, "viridis"), n_colors=max(1, counts_by_family[fam]))
+            for fam in unique_families
+        }
+
+        # assign shades in appearance order within each family
+        used_index = {fam: 0 for fam in unique_families}
+        colors = []
+        for fam in families:
+            idx = used_index[fam]
+            colors.append(palettes[fam][idx])
+            used_index[fam] += 1
+        return colors
+
+    # aggregate
     df_avg = (
         df_kl[df_kl["day"].isin([f"Day {i + 2}" for i in selected_days])]
         .groupby(["context_length", "dgp_type", "model_name"])["kl_divergence"]
@@ -283,24 +337,28 @@ def plot_model_comparison_bar_avg(df_kl, output_path, target_type_label, selecte
         .reset_index(name="avg_kl")
     )
 
+    # one plot per (DGP, context)
     for (dgp_name, context_val), group_df in df_avg.groupby(["dgp_type", "context_length"]):
-        plot_df = group_df.sort_values("avg_kl")
+        plot_df = group_df.sort_values("avg_kl").reset_index(drop=True)
+
+        # compute family-shaded colors in the order we will plot
+        colors = assign_family_shades(plot_df["model_name"].tolist())
 
         plt.figure(figsize=(8, 6))
         bars = plt.bar(
             x=np.arange(len(plot_df)),
             height=plot_df["avg_kl"],
-            color=sns.color_palette("viridis", len(plot_df))
+            color=colors
         )
 
-        # Legend with model names
+        # Legend: map each bar to its model name (keeps your original legend behavior)
         plt.legend(
             bars,
             plot_df["model_name"],
             title="Model",
             bbox_to_anchor=(1.05, 1),
-            loc='upper left',
-            borderaxespad=0.
+            loc="upper left",
+            borderaxespad=0.0
         )
 
         plt.ylabel("Average KL Divergence")
