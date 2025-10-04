@@ -194,3 +194,5 @@ cython_debug/
 .pypirc
 simulations_new_setup/tmp/lag_llama/lag-llama/
 simulations_new_setup/tmp/toto/toto_github/
+simulations_new_setup COPY/tmp/lag_llama/lag-llama/
+simulations_new_setup COPY/tmp/toto/toto_github/
