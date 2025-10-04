@@ -1,0 +1,13 @@
+name: timesfm2_5_env
+channels:
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+      - torch>=2.2
+      - numpy
+      - pandas
+      - scipy
+      - matplotlib
+      - git+https://github.com/google-research/timesfm.git

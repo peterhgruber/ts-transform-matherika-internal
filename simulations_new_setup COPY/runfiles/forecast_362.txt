@@ -1,0 +1,7 @@
+run_name = forecast_362
+model_name = tirex_model
+dataset_name = gbm_low_vol
+target_type = returns
+context_length = 22
+prediction_days = 22
+forecast_samples = 1000

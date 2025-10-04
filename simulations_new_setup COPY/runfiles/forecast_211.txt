@@ -1,0 +1,7 @@
+run_name = forecast_211
+model_name = moirai_model_base
+dataset_name = seasonal
+target_type = prices
+context_length = 22
+prediction_days = 22
+forecast_samples = 1000

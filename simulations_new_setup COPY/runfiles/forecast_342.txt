@@ -1,0 +1,7 @@
+run_name = forecast_342
+model_name = toto_model
+dataset_name = garch
+target_type = returns
+context_length = 252
+prediction_days = 22
+forecast_samples = 1000
