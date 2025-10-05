@@ -1,0 +1,26 @@
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lllrrrrrr}
+\toprule
+ &  &  & \multicolumn{1}{l}{Temp = 0.6} & \multicolumn{1}{l}{Temp = 0.8} & \multicolumn{1}{l}{Temp = 1.0} & \multicolumn{1}{l}{Temp = 1.2} & \multicolumn{1}{l}{Temp = 1.4} & \multicolumn{1}{l}{Temp = 1.6} \\
+context\_length & dgp\_type & model\_name & Annualized Volatility & Annualized Volatility & Annualized Volatility & Annualized Volatility & Annualized Volatility & Annualized Volatility \\
+\midrule
+252 & gbm\_high\_vol & chronos\_model\_base & 0.46 & 0.57 & 9.56 & 0.86 & 1.01 & 1.09 \\
+\midrule
+252 & gbm\_high\_vol & chronos\_model\_small & 0.38 & 0.48 & 0.61 & 0.75 & 0.91 & 0.96 \\
+\midrule
+252 & gbm\_high\_vol & chronos\_model\_tiny & 0.30 & 0.41 & 0.54 & 0.62 & 0.75 & 0.84 \\
+\midrule
+252 & mixture\_normal & chronos\_model\_base & 0.07 & 0.10 & 0.16 & 0.20 & 0.33 & 0.51 \\
+\midrule
+252 & mixture\_normal & chronos\_model\_small & 0.08 & 0.10 & 0.14 & 0.20 & 0.31 & 0.83 \\
+\midrule
+252 & mixture\_normal & chronos\_model\_tiny & 0.07 & 0.09 & 0.13 & 0.17 & 0.23 & 0.40 \\
+\midrule
+252 & t\_garch & chronos\_model\_base & 0.07 & 0.10 & 0.14 & 0.29 & 0.59 & 0.90 \\
+\midrule
+252 & t\_garch & chronos\_model\_small & 0.06 & 0.08 & 0.12 & 0.27 & 0.43 & 0.88 \\
+\midrule
+252 & t\_garch & chronos\_model\_tiny & 0.05 & 0.07 & 0.10 & 0.18 & 0.29 & 0.96 \\
+\bottomrule
+\end{tabular}
+}

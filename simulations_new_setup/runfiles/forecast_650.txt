@@ -1,0 +1,8 @@
+run_name = forecast_650
+model_name = chronos_model_small
+dataset_name = t_garch
+target_type = prices
+context_length = 22
+prediction_days = 22
+forecast_samples = 1000
+temperature = 0.8

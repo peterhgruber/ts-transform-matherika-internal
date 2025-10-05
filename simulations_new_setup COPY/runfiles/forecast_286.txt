@@ -1,7 +1,0 @@
-run_name = forecast_286
-model_name = moirai_model_small_1_1
-dataset_name = seasonal
-target_type = returns
-context_length = 66
-prediction_days = 22
-forecast_samples = 1000

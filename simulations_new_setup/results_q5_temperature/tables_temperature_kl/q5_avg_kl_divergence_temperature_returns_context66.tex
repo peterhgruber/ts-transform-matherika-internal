@@ -1,0 +1,26 @@
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lllrrrrrr}
+\toprule
+ &  &  & \multicolumn{1}{l}{Temp = 0.6} & \multicolumn{1}{l}{Temp = 0.8} & \multicolumn{1}{l}{Temp = 1.0} & \multicolumn{1}{l}{Temp = 1.2} & \multicolumn{1}{l}{Temp = 1.4} & \multicolumn{1}{l}{Temp = 1.6} \\
+context\_length & dgp\_type & model\_name & KL Divergence & KL Divergence & KL Divergence & KL Divergence & KL Divergence & KL Divergence \\
+\midrule
+66 & gbm\_high\_vol & chronos\_model\_base & 13.53 & 13.19 & 13.49 & 13.31 & 13.43 & 13.33 \\
+\midrule
+66 & gbm\_high\_vol & chronos\_model\_small & 13.83 & 13.91 & 13.61 & 13.81 & 13.90 & 13.84 \\
+\midrule
+66 & gbm\_high\_vol & chronos\_model\_tiny & 13.64 & 13.58 & 13.58 & 13.52 & 13.61 & 13.52 \\
+\midrule
+66 & mixture\_normal & chronos\_model\_base & 15.43 & 15.69 & 15.32 & 15.43 & 15.26 & 15.60 \\
+\midrule
+66 & mixture\_normal & chronos\_model\_small & 15.79 & 15.85 & 15.80 & 15.80 & 15.70 & 15.88 \\
+\midrule
+66 & mixture\_normal & chronos\_model\_tiny & 15.70 & 15.58 & 15.70 & 15.64 & 15.61 & 15.54 \\
+\midrule
+66 & t\_garch & chronos\_model\_base & 17.43 & 17.31 & 17.26 & 17.25 & 17.04 & 17.06 \\
+\midrule
+66 & t\_garch & chronos\_model\_small & 17.20 & 17.24 & 17.17 & 17.03 & 17.14 & 17.23 \\
+\midrule
+66 & t\_garch & chronos\_model\_tiny & 16.57 & 16.71 & 17.06 & 16.75 & 16.67 & 16.82 \\
+\bottomrule
+\end{tabular}
+}

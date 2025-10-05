@@ -1,7 +1,0 @@
-run_name = forecast_462
-model_name = timesfm_model_large
-dataset_name = mixture_normal
-target_type = returns
-context_length = 252
-prediction_days = 22
-forecast_samples = 1000

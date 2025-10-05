@@ -1,0 +1,8 @@
+run_name = forecast_812
+model_name = chronos_model_base
+dataset_name = mixture_normal
+target_type = returns
+context_length = 66
+prediction_days = 22
+forecast_samples = 1000
+temperature = 0.8

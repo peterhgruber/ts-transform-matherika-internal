@@ -277,7 +277,7 @@ def plot_model_comparison_bar_avg(df_kl, output_path, target_type_label, selecte
     """
     output_path.mkdir(parents=True, exist_ok=True)
 
-    # --- family → base colormap (choose distinct, readable palettes)
+    # family → base colormap (choose distinct, readable palettes)
     family_cmaps = {
         "chronos": "Blues",
         "moirai": "Greens",
@@ -401,3 +401,115 @@ def plot_kl_bar_by_vol(df_kl, output_path, target_type_label, fixed_context):
             plt.savefig(filename, dpi=300)
             plt.close()
 
+
+# ------------------------------------------------------------------------------
+# KL Divergence vs Temperature
+# ------------------------------------------------------------------------------
+def plot_temperature_vs_kl(df_avg, output_path, model_name, target_type_label):
+    """
+    Plot average KL divergence vs temperature for a given Chronos model,
+    grouped by DGP and context length.
+
+    Parameters:
+    - df_avg: DataFrame with columns ["context_length", "dgp_type", "model_name", "temperature", "avg_kl"]
+    - output_path: Path where plots are saved
+    - model_name: str, e.g. "chronos_model_tiny"
+    - target_type_label: "prices" or "returns"
+    """
+
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    # Filter only for the given model
+    df_model = df_avg[df_avg["model_name"] == model_name]
+    if df_model.empty:
+        print(f"[SKIP] No data for {model_name} ({target_type_label})")
+        return
+
+    # Palettes per DGP for consistent visuals
+    dgp_list = sorted(df_model["dgp_type"].unique())
+    palette = sns.color_palette("husl", n_colors=len(dgp_list))
+    color_map = {dgp: palette[i] for i, dgp in enumerate(dgp_list)}
+
+    # One figure per context length
+    for context_val, group_df in df_model.groupby("context_length"):
+        plt.figure(figsize=(8, 6))
+
+        # Sort temperatures and plot line for each DGP
+        for dgp in dgp_list:
+            sub = group_df[group_df["dgp_type"] == dgp].sort_values("temperature")
+            if sub.empty:
+                continue
+            plt.plot(
+                sub["temperature"],
+                sub["avg_kl"],
+                marker="o",
+                label=dgp,
+                color=color_map[dgp],
+                linewidth=2
+            )
+
+        plt.title(f"{model_name} — {target_type_label} — Context {context_val}")
+        plt.xlabel("Temperature")
+        plt.ylabel("Average KL Divergence")
+        plt.legend(title="DGP Type", bbox_to_anchor=(1.05, 1), loc="upper left")
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+
+        filename = output_path / f"temperature_vs_kl_{model_name}_{target_type_label}_context{context_val}.png"
+        plt.savefig(filename, dpi=300)
+        plt.close()
+
+
+# ------------------------------------------------------------------------------
+# Volatility vs Temperature (styled like KL vs Temperature)
+# ------------------------------------------------------------------------------
+def plot_temperature_vs_vol(df_vol, output_path, model_name, target_type_label):
+    """
+    Plot annualized volatility vs temperature for a given Chronos model,
+    grouped by DGP and context length.
+    Ensures numeric sorting and smooth line connections.
+    """
+    output_path.mkdir(parents=True, exist_ok=True)
+    sns.set(style="whitegrid")
+
+    df_model = df_vol[df_vol["model_name"] == model_name].copy()
+    if df_model.empty:
+        print(f"[SKIP] No data for {model_name} ({target_type_label})")
+        return
+
+    # Ensure numeric temperature sorting
+    df_model["temperature"] = pd.to_numeric(df_model["temperature"], errors="coerce")
+    df_model = df_model.dropna(subset=["temperature", "annualized_vol"])
+
+    dgp_list = sorted(df_model["dgp_type"].unique())
+    palette = sns.color_palette("husl", n_colors=len(dgp_list))
+    color_map = {dgp: palette[i] for i, dgp in enumerate(dgp_list)}
+
+    for context_val, group_df in df_model.groupby("context_length"):
+        plt.figure(figsize=(8, 6))
+        for dgp in dgp_list:
+            sub = group_df[group_df["dgp_type"] == dgp].sort_values("temperature")
+            if sub.empty:
+                continue
+            plt.plot(
+                sub["temperature"],
+                sub["annualized_vol"],
+                marker="o",
+                markersize=5,
+                linestyle="-",
+                linewidth=2,
+                color=color_map[dgp],
+                label=dgp,
+                alpha=0.9
+            )
+
+        plt.title(f"{model_name} — {target_type_label} — Context {context_val}")
+        plt.xlabel("Temperature")
+        plt.ylabel("Annualized Volatility")
+        plt.legend(title="DGP Type", bbox_to_anchor=(1.05, 1), loc="upper left", frameon=False)
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+
+        filename = output_path / f"temperature_vs_vol_{model_name}_{target_type_label}_context{context_val}.png"
+        plt.savefig(filename, dpi=300)
+        plt.close()

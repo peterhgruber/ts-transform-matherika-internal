@@ -54,8 +54,14 @@ def main():
 
         model_name = run_config.get("model_name", "")
 
-        if model_name.startswith("timesfm_model") or model_name.startswith("moirai_model_small_2_0"):
-            continue  # Skip TimesFM and Moirai2
+        # Skip TimesFM and Moirai2 jobs
+        if (
+            model_name.startswith("timesfm_model")  # old TimesFM
+            or model_name.startswith("moirai_model_small_2_0")
+            or model_name.startswith("timesfm_model_2_0")  # new
+            or model_name.startswith("timesfm_model_2_5")  # new
+        ):
+            continue
 
         grouped_runfiles[model_name].append((runfile_path, run_config))
 
@@ -121,8 +127,18 @@ def main():
                 "n_samples": forecast_samples,
                 "pipeline": pipeline if "pipeline" in forecast_params else None,
                 "device": torch.device("cuda" if torch.cuda.is_available() else "cpu")
-                          if "device" in forecast_params else None,
+                        if "device" in forecast_params else None,
             }
+
+            # Include optional parameters if present in the runfile
+            if "temperature" in run_config:
+                args["temperature"] = run_config["temperature"]
+            if "top_k" in run_config:
+                args["top_k"] = run_config["top_k"]
+            if "top_p" in run_config:
+                args["top_p"] = run_config["top_p"]
+
+            # Filter only parameters actually used by the forecast function
             filtered_args = {k: v for k, v in args.items() if v is not None and k in forecast_params}
 
             try:

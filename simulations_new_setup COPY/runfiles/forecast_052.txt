@@ -1,7 +1,0 @@
-run_name = forecast_052
-model_name = chronos_model_mini
-dataset_name = garch
-target_type = returns
-context_length = 66
-prediction_days = 22
-forecast_samples = 1000

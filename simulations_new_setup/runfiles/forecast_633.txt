@@ -1,0 +1,8 @@
+run_name = forecast_633
+model_name = chronos_model_small
+dataset_name = gbm_high_vol
+target_type = returns
+context_length = 66
+prediction_days = 22
+forecast_samples = 1000
+temperature = 1.0

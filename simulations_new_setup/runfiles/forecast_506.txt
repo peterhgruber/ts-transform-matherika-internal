@@ -1,0 +1,8 @@
+run_name = forecast_506
+model_name = chronos_model_tiny
+dataset_name = gbm_high_vol
+target_type = prices
+context_length = 22
+prediction_days = 22
+forecast_samples = 1000
+temperature = 0.8
