@@ -1,0 +1,7 @@
+run_name = forecast_410
+model_name = timesfm_model_small
+dataset_name = garch
+target_type = returns
+context_length = 22
+prediction_days = 22
+forecast_samples = 1000

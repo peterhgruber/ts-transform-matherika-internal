@@ -130,7 +130,7 @@ def format_pivot_table(raw_table, selected_days, dgp_order=None):
 # ------------------------------------------------------------------------------
 # Latex conversion for DataFrame (Flexible Index Support)
 # ------------------------------------------------------------------------------
-def dataframe_to_latex(dataframe, output_path, preserve_index_order=False, value_label="Value"):
+def dataframe_to_latex(dataframe, output_path, preserve_index_order=False):
     """
     Converts a DataFrame with multi-index to a LaTeX tabular format.
 
@@ -138,7 +138,7 @@ def dataframe_to_latex(dataframe, output_path, preserve_index_order=False, value
         dataframe (pd.DataFrame): Pivoted and optionally pre-sorted DataFrame.
         output_path (Path): Output .tex file location.
         preserve_index_order (bool): If True, row order is preserved as-is.
-        value_label (str): Custom label for value subheaders (default: 'Value').
+                                     If False, standard alphabetical sort is applied.
     """
     def latex_escape(text):
         if isinstance(text, str):
@@ -159,7 +159,7 @@ def dataframe_to_latex(dataframe, output_path, preserve_index_order=False, value
     else:
         table_copy.columns = [latex_escape(col) for col in table_copy.columns]
         day_groups = table_copy.columns
-        subheaders = [value_label] * len(day_groups)
+        subheaders = ["Value"] * len(day_groups)
 
     # Escape row index values
     table_copy.index = pd.MultiIndex.from_tuples([
@@ -178,16 +178,14 @@ def dataframe_to_latex(dataframe, output_path, preserve_index_order=False, value
     # Column count for header
     col_count = table_copy.shape[1]
     num_index_cols = len(table_copy.index.names)
-    header = (
-        "\\resizebox{\\textwidth}{!}{%\n"
-        "\\begin{tabular}{" + "l" * num_index_cols + "r" * col_count + "}\n\\toprule\n"
-    )
+    header = "\\resizebox{\\textwidth}{!}{%\n\\begin{tabular}{" + "l" * num_index_cols + "r" * col_count + "}\n\\toprule\n"
 
     # Column group headers (top row)
     header += " & " * num_index_cols
     last_group = None
     span = 0
     spans = []
+
     for group in day_groups:
         if group == last_group:
             span += 1
@@ -209,17 +207,23 @@ def dataframe_to_latex(dataframe, output_path, preserve_index_order=False, value
     # Row data
     lines = []
     last_key = None
+
     for index_tuple, row in table_copy.iterrows():
         index_names = table_copy.index.names
         index_dict = dict(zip(index_names, index_tuple))
         current_key = tuple(index_dict.get(k, "") for k in ["model_name", "dgp_type"])
+
         if last_key and current_key != last_key:
             lines.append("\\midrule")
         last_key = current_key
+
         index_values = [str(index_dict.get(col, "")) for col in index_names]
         row_values = " & ".join(row.tolist())
         lines.append(f"{' & '.join(index_values)} & {row_values} \\\\")
 
     footer = "\n\\bottomrule\n\\end{tabular}\n}"
+
     with open(output_path, "w") as f:
         f.write(header + "\n".join(lines) + footer)
+
+
