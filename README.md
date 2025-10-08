@@ -28,3 +28,10 @@ Internal repo for TSFM project
 ## New Research Questions
 
 - Do TSFMs capture technical analysis on stocks?
+
+
+## Updated new research questions (Oct 2025)
+- What exactly is the benefit of a longer context?
+	- Draw a curve: context size on x-axis, precision measure (eg RSME) on y-axis
+	- Do we need **even longer** context to predict longer horizons? --> Draw two lines on previous curve, one for "short term" prediction, one for "medium term"
+- Look ito Morai MoE
