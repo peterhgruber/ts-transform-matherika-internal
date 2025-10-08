@@ -1,7 +1,0 @@
-run_name = forecast_408
-model_name = timesfm_model_small
-dataset_name = gbm_high_vol
-target_type = returns
-context_length = 252
-prediction_days = 22
-forecast_samples = 1000

@@ -1,7 +1,0 @@
-run_name = forecast_139
-model_name = lag_llama_model
-dataset_name = seasonal
-target_type = prices
-context_length = 22
-prediction_days = 22
-forecast_samples = 1000

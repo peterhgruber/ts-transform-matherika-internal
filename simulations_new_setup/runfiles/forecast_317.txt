@@ -1,7 +1,0 @@
-run_name = forecast_317
-model_name = moirai_model_base_1_1
-dataset_name = mixture_normal
-target_type = prices
-context_length = 252
-prediction_days = 22
-forecast_samples = 1000
