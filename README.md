@@ -35,3 +35,5 @@ Internal repo for TSFM project
 	- Draw a curve: context size on x-axis, precision measure (eg RSME) on y-axis
 	- Do we need **even longer** context to predict longer horizons? --> Draw two lines on previous curve, one for "short term" prediction, one for "medium term"
 - Look ito Morai MoE
+- If temp has no impact on returns with Chronos, try multiplying all retunrns by 100 (i.e. in %) ... this may help the tokenizer --> whole new set of research questions
+- Are there more hallucinations in the case of (almost) constant data in the context?
